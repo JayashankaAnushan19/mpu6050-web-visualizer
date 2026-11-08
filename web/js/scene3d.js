@@ -98,7 +98,8 @@ export class BoardScene {
   }
 
   #buildBoard() {
-    const group = new THREE.Group();
+    const board = new THREE.Group();   // sensor frame: rotated by setAttitude()
+    const group = new THREE.Group();   // PCB drawing, header along its near (+Z) edge
     const { w, t, d } = BOARD;
 
     // PCB: textured top, plain edges.
@@ -130,12 +131,20 @@ export class BoardScene {
 
     group.add(makeHeader(t, d));
 
-    // Body-fixed axis arrows, starting at the chip.
-    const origin = new THREE.Vector3(0, t / 2 + 0.1, texToZ(336));
-    group.add(makeArrow(new THREE.Vector3(1, 0, 0), origin, 2.3, AXIS_COLORS.x, 'X'));
-    group.add(makeArrow(new THREE.Vector3(0, 0, -1), origin, 1.9, AXIS_COLORS.y, 'Y'));
-    group.add(makeArrow(new THREE.Vector3(0, 1, 0), origin, 1.6, AXIS_COLORS.z, 'Z'));
-    return group;
+    // Place the PCB the way the chip sits on a real GY-521: sensor +X points
+    // across the board away from the pin header, sensor +Y runs along the
+    // header row (toward the VCC end). Turning the drawing -90° about the
+    // vertical puts the header on the scene's -X side.
+    group.rotation.y = -Math.PI / 2;
+    board.add(group);
+
+    // Body-fixed axis arrows in the sensor frame, starting at the chip.
+    const origin = new THREE.Vector3(0, t / 2 + 0.1, texToZ(336))
+      .applyAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+    board.add(makeArrow(new THREE.Vector3(1, 0, 0), origin, 2.0, AXIS_COLORS.x, 'X'));
+    board.add(makeArrow(new THREE.Vector3(0, 0, -1), origin, 2.4, AXIS_COLORS.y, 'Y'));
+    board.add(makeArrow(new THREE.Vector3(0, 1, 0), origin, 1.6, AXIS_COLORS.z, 'Z'));
+    return board;
   }
 }
 
@@ -268,8 +277,8 @@ function makePcbTexture() {
     g.beginPath(); g.arc(x, 650, 11, 0, Math.PI * 2); g.fill();
   });
 
-  // Axis legend as printed on real boards: X right, Y up (away), Z out of board
-  drawSilkAxes(g, 820, 400);
+  // Axis legend as printed on the GY-521: X away from the header, Y toward VCC
+  drawSilkAxes(g, 860, 440);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -289,12 +298,12 @@ function drawSilkAxes(g, x, y) {
     g.lineTo(x2 - 18 * Math.cos(a + 0.45), y2 - 18 * Math.sin(a + 0.45));
     g.fill();
   };
-  arrow(x + 110, y);
-  arrow(x, y - 110);
+  arrow(x, y - 110);   // X: up in the texture = away from the header
+  arrow(x - 110, y);   // Y: left in the texture = toward VCC
   g.beginPath(); g.arc(x, y, 12, 0, Math.PI * 2); g.stroke();
   g.beginPath(); g.arc(x, y, 4, 0, Math.PI * 2); g.fill();
   g.font = '700 32px Inter, system-ui, sans-serif';
-  g.fillText('X', x + 135, y + 11);
-  g.fillText('Y', x, y - 128);
-  g.fillText('Z', x - 30, y + 40);
+  g.fillText('X', x, y - 128);
+  g.fillText('Y', x - 138, y + 11);
+  g.fillText('Z', x + 30, y + 40);
 }
