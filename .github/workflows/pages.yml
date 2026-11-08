@@ -1,9 +1,11 @@
-name: Deploy web app to GitHub Pages
+# Publishes the project hub (index.html) and each project's web/ folder to
+# GitHub Pages, so the live demos in the README work.
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/pages.yml']
+    paths: ['index.html', '*/web/**', '*/docs/screenshot.png', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -24,8 +26,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Collect site files
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          for p in visualizer leveler; do
+            mkdir -p "_site/$p/docs"
+            cp -r "$p/web" "_site/$p/web"
+            cp "$p/docs/screenshot.png" "_site/$p/docs/"
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

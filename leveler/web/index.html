@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MPU6050 Digital Leveler</title>
+  <meta name="description" content="A digital spirit level: MPU6050 tilt shown on five LEDs and live in the browser over Web Serial.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='11' width='28' height='10' rx='5' fill='%233d5a22'/><ellipse cx='16' cy='16' rx='5' ry='3' fill='%2334d399'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a class="back" href="../../" title="All projects" aria-label="All projects">←</a>
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <h1>MPU6050 Digital Leveler</h1>
+        <p class="brand-sub">Arduino Uno · 5 LEDs · Web Serial</p>
+      </div>
+    </div>
+
+    <div class="topbar-controls">
+      <label class="field">
+        <span>Baud</span>
+        <select id="baud">
+          <option>9600</option>
+          <option>57600</option>
+          <option selected>115200</option>
+        </select>
+      </label>
+      <button id="btn-connect" class="btn btn-primary">Connect</button>
+      <label class="toggle" title="Simulated data, no hardware needed (D)">
+        <input type="checkbox" id="demo-toggle">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        <span>Demo</span>
+      </label>
+      <div id="status" class="status" data-state="idle">
+        <span class="status-dot"></span>
+        <span id="status-text">Disconnected</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="unsupported" class="banner" hidden>
+    <strong>Web Serial isn't available in this browser.</strong>
+    Use desktop Chrome or Edge to connect a real sensor, or switch on <button class="link" id="banner-demo">Demo mode</button>.
+  </div>
+
+  <main class="layout">
+    <!-- Main level ---------------------------------------------------------->
+    <section class="card level-card">
+      <div class="card-head">
+        <h2>Level <small id="axis-label">roll axis</small></h2>
+        <span id="level-badge" class="badge">--</span>
+      </div>
+
+      <div class="readout">
+        <b id="angle">0.0°</b>
+        <span class="muted" id="angle-hint">Tilt within ±0.5° counts as level</span>
+      </div>
+
+      <div class="leds" id="leds" aria-label="LED mirror">
+        <div class="led red"><i></i><span>D3</span></div>
+        <div class="led yellow"><i></i><span>D5</span></div>
+        <div class="led green"><i></i><span>D6</span></div>
+        <div class="led yellow"><i></i><span>D9</span></div>
+        <div class="led red"><i></i><span>D10</span></div>
+      </div>
+
+      <canvas id="vial" class="vial" aria-label="Spirit level vial"></canvas>
+    </section>
+
+    <!-- Side ---------------------------------------------------------------->
+    <aside class="side">
+      <section class="card">
+        <div class="card-head"><h2>Bullseye <small>both axes</small></h2><span class="muted" id="rate">0 Hz</span></div>
+        <canvas id="bullseye" class="bullseye" aria-label="Bullseye level"></canvas>
+        <div class="stats">
+          <div><span>Roll</span><b id="roll">+0.0°</b></div>
+          <div><span>Pitch</span><b id="pitch">+0.0°</b></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Settings <small>saved on the Arduino</small></h2></div>
+        <div class="settings">
+          <div class="setting">
+            <span>Axis</span>
+            <div class="segmented" role="group" aria-label="Axis">
+              <button class="btn" data-axis="roll" data-needs-source>Roll</button>
+              <button class="btn" data-axis="pitch" data-needs-source>Pitch</button>
+            </div>
+          </div>
+          <label class="setting">
+            <span>Tolerance</span>
+            <select id="tol" data-needs-source>
+              <option value="0.1">±0.1°</option>
+              <option value="0.2">±0.2°</option>
+              <option value="0.5" selected>±0.5°</option>
+              <option value="1.0">±1.0°</option>
+              <option value="2.0">±2.0°</option>
+            </select>
+          </label>
+          <label class="setting">
+            <span>Full scale</span>
+            <select id="range" data-needs-source>
+              <option value="5">±5°</option>
+              <option value="10" selected>±10°</option>
+              <option value="20">±20°</option>
+              <option value="45">±45°</option>
+            </select>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-accent" id="btn-level" data-needs-source>Set as level <kbd>L</kbd></button>
+          <button class="btn" id="btn-clear" data-needs-source>Clear level <kbd>X</kbd></button>
+          <button class="btn" id="btn-invert" data-needs-source>Invert LEDs <kbd>I</kbd></button>
+          <button class="btn" id="btn-cal" data-needs-source>Calibrate <kbd>C</kbd></button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Log ----------------------------------------------------------------->
+    <section class="card log-card">
+      <div class="card-head"><h2>Device log</h2><button class="btn btn-ghost" id="btn-clear-log">Clear</button></div>
+      <ol id="log" class="log" aria-live="polite"></ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Shortcuts: <kbd>L</kbd> set level · <kbd>X</kbd> clear · <kbd>A</kbd> axis · <kbd>I</kbd> invert · <kbd>C</kbd> calibrate · <kbd>D</kbd> demo
+    · <a href="../../">All projects</a>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

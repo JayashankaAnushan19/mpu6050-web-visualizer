@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MPU6050 Projects</title>
+  <meta name="description" content="Arduino Uno + MPU6050 projects that run in the browser over Web Serial: a 3D motion visualizer and a digital leveler.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='4' y='8' width='24' height='16' rx='3' fill='%231f6feb'/><rect x='12' y='12' width='8' height='8' fill='%23111'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f14; --panel: #121821; --panel-2: #18202b; --border: #232d3b;
+      --text: #e6edf3; --muted: #8b98a9; --accent: #3b82f6; --accent-2: #60a5fa; --ok: #34d399;
+      --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(1100px 560px at 85% -10%, #12233d 0%, transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, #10261d 0%, transparent 55%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font: 15px/1.55 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    a { color: var(--accent-2); }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 20px 32px; }
+    header { margin-bottom: 36px; }
+    .eyebrow { font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); margin: 0 0 10px; }
+    h1 { margin: 0 0 10px; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; letter-spacing: -.02em; }
+    .lead { margin: 0; max-width: 640px; color: var(--muted); font-size: 16px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .project {
+      display: flex; flex-direction: column;
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
+      border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .project:hover { border-color: #34435a; transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+    .thumb { aspect-ratio: 16 / 9; background: #0a0e13 center top / cover no-repeat; border-bottom: 1px solid var(--border); }
+    .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .num { font: 500 12px var(--mono); color: var(--muted); }
+    h2 { margin: 0; font-size: 20px; }
+    .body p { margin: 0; color: var(--muted); }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; padding: 0; list-style: none; }
+    .tags li { font: 12px var(--mono); padding: 2px 8px; border-radius: 6px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); }
+    .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 9px;
+      font: 500 13px Inter, system-ui, sans-serif; text-decoration: none;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    }
+    .btn:hover { border-color: #34435a; background: #1d2633; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #2f74e6; border-color: #2f74e6; }
+
+    .note { margin-top: 32px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--muted); font-size: 14px; }
+    .note code { font: 13px var(--mono); color: var(--text); }
+    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 20px 40px; }
+    @media (max-width: 720px) { .wrap { padding: 36px 16px 24px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Arduino Uno · MPU6050 · Web Serial</p>
+      <h1>MPU6050 Projects</h1>
+      <p class="lead">Small hardware projects with an MPU6050 motion sensor. Each one streams over USB to a web page, so you can watch it live in Chrome or Edge. No app to install. Each project also has a demo mode, so you can try it without hardware.</p>
+    </header>
+
+    <main class="grid">
+      <article class="project">
+        <div class="thumb" style="background-image:url('visualizer/docs/screenshot.png')"></div>
+        <div class="body">
+          <span class="num">01</span>
+          <h2>Motion Visualizer</h2>
+          <p>A 3D board that follows the sensor's roll, pitch and yaw, with an artificial horizon, live charts and CSV recording.</p>
+          <ul class="tags"><li>Three.js</li><li>uPlot</li><li>complementary filter</li></ul>
+          <div class="links">
+            <a class="btn btn-primary" href="visualizer/web/">Open</a>
+            <a class="btn" href="visualizer/web/?demo">Demo</a>
+            <a class="btn" href="https://github.com/JayashankaAnushan19/mpu6050-web-visualizer/tree/main/visualizer">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="project">
+        <div class="thumb" style="background-image:url('leveler/docs/screenshot.png')"></div>
+        <div class="body">
+          <span class="num">02</span>
+          <h2>Digital Leveler</h2>
+          <p>A spirit level with five LEDs. The light glides like a bubble, and only the green centre LED is lit when level. The page mirrors the LEDs and adds a vial and a bullseye.</p>
+          <ul class="tags"><li>5 PWM LEDs</li><li>EEPROM settings</li><li>Canvas</li></ul>
+          <div class="links">
+            <a class="btn btn-primary" href="leveler/web/">Open</a>
+            <a class="btn" href="leveler/web/?demo">Demo</a>
+            <a class="btn" href="https://github.com/JayashankaAnushan19/mpu6050-web-visualizer/tree/main/leveler">Source</a>
+          </div>
+        </div>
+      </article>
+    </main>
+
+    <p class="note">Each project has its own Arduino sketch. Upload the one you want to use, then open its page and click <b>Connect</b>. Running locally? Double-click <code>start.bat</code>.</p>
+  </div>
+  <footer><a href="https://github.com/JayashankaAnushan19/mpu6050-web-visualizer">github.com/JayashankaAnushan19/mpu6050-web-visualizer</a> · MIT License</footer>
+</body>
+</html>

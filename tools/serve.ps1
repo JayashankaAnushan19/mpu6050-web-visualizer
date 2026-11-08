@@ -2,7 +2,7 @@
 # Serves -Root on http://localhost:<Port>/ (local machine only) and optionally
 # opens -Open in -Browser ("default" = system default browser).
 param(
-  [string]$Root = (Join-Path $PSScriptRoot '..\web'),
+  [string]$Root = (Join-Path $PSScriptRoot '..'),
   [int]$Port = 8000,
   [string]$Open = '',
   [string]$Browser = 'default'
@@ -38,9 +38,12 @@ function Send-File($ctx) {
   if ($rel -eq '' -or $rel.EndsWith('/')) { $rel += 'index.html' }
   $file = [System.IO.Path]::GetFullPath((Join-Path $Root $rel))
   $res = $ctx.Response
+  $inside = $file.StartsWith($Root + '\') -and -not ($rel -match '(^|/)\.')   # no ../ tricks, no .git etc.
 
-  # Only serve files inside $Root (blocks ../ tricks).
-  if ($file.StartsWith($Root + '\') -and (Test-Path -LiteralPath $file -PathType Leaf)) {
+  if ($inside -and (Test-Path -LiteralPath $file -PathType Container)) {
+    # /leveler/web -> /leveler/web/ so relative links resolve
+    $res.Redirect($ctx.Request.Url.AbsolutePath + '/' + $ctx.Request.Url.Query)
+  } elseif ($inside -and (Test-Path -LiteralPath $file -PathType Leaf)) {
     $ext = [System.IO.Path]::GetExtension($file).ToLower()
     $res.ContentType = $(if ($types[$ext]) { $types[$ext] } else { 'application/octet-stream' })
     $res.Headers['Cache-Control'] = 'no-cache'
